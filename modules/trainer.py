@@ -190,7 +190,9 @@ class Trainer(BaseTrainer):
 
         train_loss = 0
         self.model.train()
-        for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.train_dataloader):
+        print ("self.train_dataloader")
+        print (self.train_dataloader)
+        for batch_idx, (images_id, images, reports_ids, reports_masks) in tqdm(self.train_dataloader):
             images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(self.device), reports_masks.to(self.device)
             output = self.model(images, reports_ids, mode='train')
             loss = self.criterion(output, reports_ids, reports_masks)
