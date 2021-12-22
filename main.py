@@ -8,6 +8,7 @@ from modules.optimizers import build_optimizer, build_lr_scheduler
 from modules.trainer import Trainer
 from modules.loss import compute_loss
 from models.r2gen import R2GenModel
+from models.r2gen_visual_extractor import R2GenVisualExtractorModel
 
 
 def parse_agrs():
@@ -105,18 +106,19 @@ def main():
     test_dataloader = R2DataLoader(args, tokenizer, split='test', shuffle=False)
 
     # build model architecture
-    model = R2GenModel(args, tokenizer)
+    visual_extractor_model = R2GenVisualExtractorModel(args)
+    r2gen_model = R2GenModel(args, tokenizer)
 
     # get function handles of loss and metrics
     criterion = compute_loss
     metrics = compute_scores
 
     # build optimizer, learning rate scheduler
-    optimizer = build_optimizer(args, model)
+    optimizer = build_optimizer(args, r2gen_model)
     lr_scheduler = build_lr_scheduler(args, optimizer)
 
     # build trainer and start to train
-    trainer = Trainer(model, criterion, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
+    trainer = Trainer(visual_extractor_model, r2gen_model, criterion, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
     trainer.train()
 
 

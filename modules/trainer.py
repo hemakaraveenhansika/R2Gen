@@ -8,14 +8,16 @@ from numpy import inf
 from tqdm import tqdm
 
 class BaseTrainer(object):
-    def __init__(self, model, criterion, metric_ftns, optimizer, args):
+    def __init__(self, visual_extractor_model, r2gen_model, criterion, metric_ftns, optimizer, args):
         self.args = args
 
-        # setup GPU device if available, move model into configured device
+        # setup GPU device if available, move r2gen_model into configured device
         self.device, device_ids = self._prepare_device(args.n_gpu)
-        self.model = model.to(self.device)
+        self.visual_extractor_model = visual_extractor_model.to(self.device)
+        self.r2gen_model = r2gen_model.to(self.device)
         if len(device_ids) > 1:
-            self.model = torch.nn.DataParallel(model, device_ids=device_ids)
+            self.visual_extractor_model = torch.nn.DataParallel(visual_extractor_model, device_ids=device_ids)
+            self.r2gen_model = torch.nn.DataParallel(r2gen_model, device_ids=device_ids)
 
         self.criterion = criterion
         self.metric_ftns = metric_ftns
@@ -63,15 +65,15 @@ class BaseTrainer(object):
             for key, value in log.items():
                 print('\t{:15s}: {}'.format(str(key), value))
 
-            # evaluate model performance according to configured metric, save best checkpoint as model_best
+            # evaluate r2gen_model performance according to configured metric, save best checkpoint as r2gen_model_best
             best = False
             if self.mnt_mode != 'off':
                 try:
-                    # check whether model performance improved or not, according to specified metric(mnt_metric)
+                    # check whether r2gen_model performance improved or not, according to specified metric(mnt_metric)
                     improved = (self.mnt_mode == 'min' and log[self.mnt_metric] <= self.mnt_best) or \
                                (self.mnt_mode == 'max' and log[self.mnt_metric] >= self.mnt_best)
                 except KeyError:
-                    print("Warning: Metric '{}' is not found. " "Model performance monitoring is disabled.".format(
+                    print("Warning: Metric '{}' is not found. " "r2gen_model performance monitoring is disabled.".format(
                         self.mnt_metric))
                     self.mnt_mode = 'off'
                     improved = False
@@ -99,8 +101,8 @@ class BaseTrainer(object):
         self.best_recorder['test']['time'] = crt_time
         self.best_recorder['val']['seed'] = self.args.seed
         self.best_recorder['test']['seed'] = self.args.seed
-        self.best_recorder['val']['best_model_from'] = 'val'
-        self.best_recorder['test']['best_model_from'] = 'test'
+        self.best_recorder['val']['best_r2gen_model_from'] = 'val'
+        self.best_recorder['test']['best_r2gen_model_from'] = 'test'
 
         if not os.path.exists(self.args.record_dir):
             os.makedirs(self.args.record_dir)
@@ -130,7 +132,7 @@ class BaseTrainer(object):
     def _save_checkpoint(self, epoch, save_best=False):
         state = {
             'epoch': epoch,
-            'state_dict': self.model.state_dict(),
+            'state_dict': self.r2gen_model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
             'monitor_best': self.mnt_best
         }
@@ -138,9 +140,9 @@ class BaseTrainer(object):
         torch.save(state, filename)
         print("Saving checkpoint: {} ...".format(filename))
         if save_best:
-            best_path = os.path.join(self.checkpoint_dir, 'model_best.pth')
+            best_path = os.path.join(self.checkpoint_dir, 'r2gen_model_best.pth')
             torch.save(state, best_path)
-            print("Saving current best: model_best.pth ...")
+            print("Saving current best: r2gen_model_best.pth ...")
 
     def _resume_checkpoint(self, resume_path):
         resume_path = str(resume_path)
@@ -148,7 +150,7 @@ class BaseTrainer(object):
         checkpoint = torch.load(resume_path)
         self.start_epoch = checkpoint['epoch'] + 1
         self.mnt_best = checkpoint['monitor_best']
-        self.model.load_state_dict(checkpoint['state_dict'])
+        self.r2gen_model.load_state_dict(checkpoint['state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer'])
 
         print("Checkpoint loaded. Resume training from epoch {}".format(self.start_epoch))
@@ -178,9 +180,8 @@ class BaseTrainer(object):
 
 
 class Trainer(BaseTrainer):
-    def __init__(self, model, criterion, metric_ftns, optimizer, args, lr_scheduler, train_dataloader, val_dataloader,
-                 test_dataloader):
-        super(Trainer, self).__init__(model, criterion, metric_ftns, optimizer, args)
+    def __init__(self, visual_extractor_model, r2gen_model, criterion, metric_ftns, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader):
+        super(Trainer, self).__init__(visual_extractor_model, r2gen_model, criterion, metric_ftns, optimizer, args)
         self.lr_scheduler = lr_scheduler
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
@@ -189,49 +190,69 @@ class Trainer(BaseTrainer):
     def _train_epoch(self, epoch):
 
         train_loss = 0
-        self.model.train()
+        self.visual_extractor_model.train()
+        self.r2gen_model.train()
 
         # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.train_dataloader):
         for images_id, images, reports_ids, reports_masks in tqdm(self.train_dataloader):
             images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(self.device), reports_masks.to(self.device)
-            output = self.model(images, reports_ids, mode='train')
+
+            att_feats, fc_feats = self.visual_extractor_model(images)
+            print(att_feats.shape, fc_feats.shape)
+
+            output = self.r2gen_model(att_feats, fc_feats, reports_ids, mode='train')
             loss = self.criterion(output, reports_ids, reports_masks)
             train_loss += loss.item()
             self.optimizer.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_value_(self.model.parameters(), 0.1)
+            torch.nn.utils.clip_grad_value_(self.r2gen_model.parameters(), 0.1)
             self.optimizer.step()
         log = {'train_loss': train_loss / len(self.train_dataloader)}
 
-        self.model.eval()
+
+
+        self.visual_extractor_model.eval()
+        self.r2gen_model.eval()
         with torch.no_grad():
             val_gts, val_res = [], []
 
             # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.val_dataloader):
             for images_id, images, reports_ids, reports_masks in tqdm(self.val_dataloader):
-                images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(
-                    self.device), reports_masks.to(self.device)
-                output = self.model(images, mode='sample')
-                reports = self.model.tokenizer.decode_batch(output.cpu().numpy())
-                ground_truths = self.model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
+                images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
+
+                att_feats, fc_feats = self.visual_extractor_model(images)
+                print(att_feats.shape, fc_feats.shape)
+
+                output = self.r2gen_model(att_feats, fc_feats, mode='sample')
+                reports = self.r2gen_model.tokenizer.decode_batch(output.cpu().numpy())
+                ground_truths = self.r2gen_model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
                 val_res.extend(reports)
                 val_gts.extend(ground_truths)
             val_met = self.metric_ftns({i: [gt] for i, gt in enumerate(val_gts)}, {i: [re] for i, re in enumerate(val_res)})
             log.update(**{'val_' + k: v for k, v in val_met.items()})
 
-        self.model.eval()
+
+        self.visual_extractor_model.eval()
+        self.r2gen_model.eval()
         with torch.no_grad():
             test_gts, test_res = [], []
 
             # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.test_dataloader):
             for images_id, images, reports_ids, reports_masks in tqdm(self.test_dataloader):
-                images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(
-                    self.device), reports_masks.to(self.device)
-                output = self.model(images, mode='sample')
-                reports = self.model.tokenizer.decode_batch(output.cpu().numpy())
-                ground_truths = self.model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
+                images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
+
+                att_feats, fc_feats = self.visual_extractor_model(images)
+                print(att_feats.shape, fc_feats.shape)
+
+                output = self.r2gen_model(att_feats.shape, fc_feats.shape, mode='sample')
+                reports = self.r2gen_model.tokenizer.decode_batch(output.cpu().numpy())
+                ground_truths = self.r2gen_model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
                 test_res.extend(reports)
                 test_gts.extend(ground_truths)
+
+                print(ground_truths)
+                print(reports, "\n")
+
             test_met = self.metric_ftns({i: [gt] for i, gt in enumerate(test_gts)},
                                         {i: [re] for i, re in enumerate(test_res)})
             log.update(**{'test_' + k: v for k, v in test_met.items()})
