@@ -244,7 +244,7 @@ class Trainer(BaseTrainer):
                 att_feats, fc_feats = self.visual_extractor_model(images)
                 print(att_feats.shape, fc_feats.shape)
 
-                output = self.r2gen_model(att_feats.shape, fc_feats.shape, mode='sample')
+                output = self.r2gen_model(att_feats, fc_feats, mode='sample')
                 reports = self.r2gen_model.tokenizer.decode_batch(output.cpu().numpy())
                 ground_truths = self.r2gen_model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
                 test_res.extend(reports)
