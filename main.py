@@ -127,7 +127,7 @@ def main():
 
     # build trainer and start to train
 
-    if (args.seed == 'encoder') :
+    if (args.mode == 'encoder') :
         trainer_contrastive_model = ContrastiveModelTrainer(visual_extractor_model, bert_model, NTXentLoss, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
         trainer_contrastive_model.train()
     else:
