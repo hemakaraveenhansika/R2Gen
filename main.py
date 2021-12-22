@@ -96,6 +96,7 @@ def parse_agrs():
     parser.add_argument('--mode', default='decoder', type=str, help='encoder/decoder')
 
     args = parser.parse_args()
+    args.cuda = torch.cuda.is_available()
     return args
 
 'results/current_contrastive_checkpoint.pth'
