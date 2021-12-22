@@ -5,10 +5,13 @@ from modules.tokenizers import Tokenizer
 from modules.dataloaders import R2DataLoader
 from modules.metrics import compute_scores
 from modules.optimizers import build_optimizer, build_lr_scheduler
-from modules.trainer import Trainer
+from modules.trainer import ContrastiveModelTrainer
+from modules.trainer import R2GenTrainer
 from modules.loss import compute_loss
+from modules.loss import NTXentLoss
 from models.r2gen import R2GenModel
 from models.r2gen_visual_extractor import R2GenVisualExtractorModel
+from models.r2gen_bert_classfier import BertClassfier
 
 
 def parse_agrs():
@@ -60,7 +63,7 @@ def parse_agrs():
     # Trainer settings
     parser.add_argument('--n_gpu', type=int, default=1, help='the number of gpus to be used.')
     parser.add_argument('--epochs', type=int, default=100, help='the number of training epochs.')
-    parser.add_argument('--save_dir', type=str, default='results/iu_xray', help='the patch to save the models.')
+    parser.add_argument('--save_dir', type=str, default='results/', help='the patch to save the models.')
     parser.add_argument('--record_dir', type=str, default='records/', help='the patch to save the results of experiments')
     parser.add_argument('--save_period', type=int, default=1, help='the saving period.')
     parser.add_argument('--monitor_mode', type=str, default='max', choices=['min', 'max'], help='whether to max or min the metric.')
@@ -81,11 +84,15 @@ def parse_agrs():
 
     # Others
     parser.add_argument('--seed', type=int, default=9233, help='.')
-    parser.add_argument('--resume', type=str, help='whether to resume the training from existing checkpoints.')
+    parser.add_argument('--resume_visual_extractor', type=str, help='whether to resume_visual_extractor the training from existing checkpoints.')
+    parser.add_argument('--resume_r2gen', type=str, help='whether to resume_r2gen the training from existing checkpoints.')
+
+    parser.add_argument('--mode', default='decoder', type=str, help='encoder/decoder')
 
     args = parser.parse_args()
     return args
 
+'results/current_contrastive_checkpoint.pth'
 
 def main():
     # parse arguments
@@ -107,6 +114,7 @@ def main():
 
     # build model architecture
     visual_extractor_model = R2GenVisualExtractorModel(args)
+    bert_model = BertClassfier(args)
     r2gen_model = R2GenModel(args, tokenizer)
 
     # get function handles of loss and metrics
@@ -118,8 +126,13 @@ def main():
     lr_scheduler = build_lr_scheduler(args, optimizer)
 
     # build trainer and start to train
-    trainer = Trainer(visual_extractor_model, r2gen_model, criterion, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
-    trainer.train()
+
+    if (args.seed == 'encoder') :
+        trainer_contrastive_model = ContrastiveModelTrainer(visual_extractor_model, bert_model, NTXentLoss, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
+        trainer_contrastive_model.train()
+    else:
+        trainer_r2gn = R2GenTrainer(visual_extractor_model, r2gen_model, criterion, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
+        trainer_r2gn.train()
 
 
 if __name__ == '__main__':
