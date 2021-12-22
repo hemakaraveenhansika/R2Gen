@@ -87,6 +87,12 @@ def parse_agrs():
     parser.add_argument('--resume_visual_extractor', type=str, help='whether to resume_visual_extractor the training from existing checkpoints.')
     parser.add_argument('--resume_r2gen', type=str, help='whether to resume_r2gen the training from existing checkpoints.')
 
+    #contrastive learning
+    parser.add_argument('--temperature', type=int, default=0.1, help='.')
+    parser.add_argument('--use_cosine_similarity', type=bool, default=True, help='.')
+    parser.add_argument('--alpha_weight', type=int, default=0.75, help='.')
+
+
     parser.add_argument('--mode', default='decoder', type=str, help='encoder/decoder')
 
     args = parser.parse_args()

@@ -50,12 +50,9 @@ class BaseContrastiveTrainer(object):
         self.best_recorder = {'val': {self.mnt_metric: self.mnt_best},
                               'test': {self.mnt_metric_test: self.mnt_best}}
 
-        self.temperature = 0.1
-        self.use_cosine_similarity = True
-        self.alpha_weight = 0.75
 
     def _init_nt_xent(self):
-        nt_xent = self.NTXentLoss(self.device, self.args.batch_size, self.temperature, self.use_cosine_similarity, self.alpha_weight)
+        nt_xent = self.NTXentLoss(self.device, self.args.batch_size, self.args.temperature, self.args.use_cosine_similarity, self.args.alpha_weight)
         if self.args.cuda:
             nt_xent = nt_xent.cuda()
         return nt_xent
