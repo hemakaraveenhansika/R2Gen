@@ -10,6 +10,7 @@ python main.py \
 --step_size 50 \
 --gamma 0.1 \
 --seed 9223
+--mode encoder
 
 
 #--ann_path /kaggle/input/iu-xray-dataset/dataset/iu_xray/annotation.json \
