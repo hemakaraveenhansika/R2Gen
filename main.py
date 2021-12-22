@@ -114,7 +114,7 @@ def main():
 
     # build model architecture
     visual_extractor_model = R2GenVisualExtractorModel(args)
-    bert_model = BertClassfier(args)
+    bert_model = BertClassfier(bert_base_model='bert-base-uncased', out_dim=4096, freeze_layers=[0,1,2,3,4,5])
     r2gen_model = R2GenModel(args, tokenizer)
 
     # get function handles of loss and metrics
