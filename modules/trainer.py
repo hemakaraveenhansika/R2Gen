@@ -52,7 +52,7 @@ class BaseContrastiveTrainer(object):
 
 
     def _init_nt_xent(self):
-        nt_xent = self.NTXentLoss(self.device, self.args.batch_size, self.args.temperature, self.args.use_cosine_similarity, self.args.alpha_weight)
+        nt_xent = self.NTXentLoss(self.device, self.args.batch_size, self.args.contrastive_temperature, self.args.use_cosine_similarity, self.args.alpha_weight)
         if self.args.cuda:
             nt_xent = nt_xent.cuda()
         return nt_xent

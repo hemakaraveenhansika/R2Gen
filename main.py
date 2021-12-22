@@ -88,7 +88,7 @@ def parse_agrs():
     parser.add_argument('--resume_r2gen', type=str, help='whether to resume_r2gen the training from existing checkpoints.')
 
     #contrastive learning
-    parser.add_argument('--temperature', type=float, default=0.1, help='temperature')
+    parser.add_argument('--contrastive_temperature', type=float, default=0.1, help='contrastive_temperature')
     parser.add_argument('--use_cosine_similarity', type=bool, default=True, help='use_cosine_similarity')
     parser.add_argument('--alpha_weight', type=float, default=0.75, help='alpha_weight')
 
