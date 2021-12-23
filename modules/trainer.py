@@ -444,7 +444,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             bert_tokens = bert_tokens.to(self.device)
 
             text_features = self.bert_model(bert_tokens)
-            print(fc_feats.shape, text_features.shape)
+            # print(fc_feats.shape, text_features.shape)
 
             train_loss = self.nt_xent_criterion(fc_feats, text_features)
             train_contrastive_losss += train_loss.item()
@@ -470,7 +470,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
                 bert_tokens = bert_tokens.to(self.device)
 
                 text_features = self.bert_model(bert_tokens)
-                print(fc_feats.shape, text_features.shape)
+                # print(fc_feats.shape, text_features.shape)
 
                 valid_loss = self.nt_xent_criterion(fc_feats, text_features)
                 valid_contrastive_losss += valid_loss.item()
@@ -522,7 +522,7 @@ class R2GenTrainer(BaseR2GenTrainer):
             images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(self.device), reports_masks.to(self.device)
 
             att_feats, fc_feats = self.visual_extractor_model(images)
-            print(att_feats.shape, fc_feats.shape)
+            # print(att_feats.shape, fc_feats.shape)
 
             output = self.r2gen_model(att_feats, fc_feats, reports_ids, mode='train')
             loss = self.criterion(output, reports_ids, reports_masks)
@@ -545,7 +545,7 @@ class R2GenTrainer(BaseR2GenTrainer):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
                 att_feats, fc_feats = self.visual_extractor_model(images)
-                print(att_feats.shape, fc_feats.shape)
+                # print(att_feats.shape, fc_feats.shape)
 
                 output = self.r2gen_model(att_feats, fc_feats, mode='sample')
                 reports = self.r2gen_model.tokenizer.decode_batch(output.cpu().numpy())
@@ -566,7 +566,7 @@ class R2GenTrainer(BaseR2GenTrainer):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
                 att_feats, fc_feats = self.visual_extractor_model(images)
-                print(att_feats.shape, fc_feats.shape)
+                # print(att_feats.shape, fc_feats.shape)
 
                 output = self.r2gen_model(att_feats, fc_feats, mode='sample')
                 reports = self.r2gen_model.tokenizer.decode_batch(output.cpu().numpy())
@@ -574,8 +574,8 @@ class R2GenTrainer(BaseR2GenTrainer):
                 test_res.extend(reports)
                 test_gts.extend(ground_truths)
 
-                print(ground_truths)
-                print(reports, "\n")
+                # print(ground_truths)
+                # print(reports, "\n")
 
             test_met = self.metric_ftns({i: [gt] for i, gt in enumerate(test_gts)},
                                         {i: [re] for i, re in enumerate(test_res)})
