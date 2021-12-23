@@ -520,9 +520,10 @@ class R2GenTrainer(BaseR2GenTrainer):
                 att_feats, fc_feats = self.visual_extractor_model(images)
 
                 output = self.r2gen_model(att_feats, fc_feats, mode='sample')
+                print(output.shape, reports_ids.shape, reports_masks.shape)
+
                 loss = self.criterion(output, reports_ids, reports_masks)
 
-                print(output.shape, reports_ids.shape, reports_masks.shape)
 
                 valid_loss += loss.item()
                 reports = self.r2gen_model.tokenizer.decode_batch(output.cpu().numpy())
