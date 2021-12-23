@@ -113,8 +113,7 @@ class BaseContrastiveTrainer(object):
                     not_improved_count += 1
 
                 if not_improved_count > self.early_stop:
-                    print("Validation performance didn\'t improve for {} epochs. " "Training stops.".format(
-                        self.early_stop))
+                    print("Validation performance didn\'t improve for {} epochs. " "Training stops.".format( self.early_stop))
                     break
 
             if epoch % self.save_period == 0:
@@ -486,7 +485,7 @@ class R2GenTrainer(BaseR2GenTrainer):
     def _train_epoch(self, epoch):
 
         train_loss = 0
-        self.visual_extractor_model.train()
+        self.visual_extractor_model.eval()
         self.r2gen_model.train()
 
         # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.train_dataloader):
@@ -506,7 +505,7 @@ class R2GenTrainer(BaseR2GenTrainer):
         log = {'train_loss': train_loss / len(self.train_dataloader)}
 
 
-
+        valid_loss = 0
         self.visual_extractor_model.eval()
         self.r2gen_model.eval()
         with torch.no_grad():
@@ -520,12 +519,15 @@ class R2GenTrainer(BaseR2GenTrainer):
                 # print(att_feats.shape, fc_feats.shape)
 
                 output = self.r2gen_model(att_feats, fc_feats, mode='sample')
+                loss = self.criterion(output, reports_ids, reports_masks)
+                valid_loss += loss.item()
                 reports = self.r2gen_model.tokenizer.decode_batch(output.cpu().numpy())
                 ground_truths = self.r2gen_model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
                 val_res.extend(reports)
                 val_gts.extend(ground_truths)
             val_met = self.metric_ftns({i: [gt] for i, gt in enumerate(val_gts)}, {i: [re] for i, re in enumerate(val_res)})
             log.update(**{'val_' + k: v for k, v in val_met.items()})
+            log.update(**{'valid_loss': valid_loss / len(self.val_dataloader)})
 
 
         self.visual_extractor_model.eval()
