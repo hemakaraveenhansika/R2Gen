@@ -436,7 +436,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             bert_tokens = bert_tokens.to(self.device)
 
             text_features = self.bert_model(bert_tokens)
-            print(fc_feats.shape, text_features.shape)
+            print(att_feats.shape, fc_feats.shape)
 
             train_loss = self.nt_xent_criterion(fc_feats, text_features)
             train_contrastive_losss += train_loss.item()
