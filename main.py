@@ -31,7 +31,7 @@ def parse_agrs():
     parser.add_argument('--batch_size', type=int, default=16, help='the number of samples for a batch')
 
     # Model settings (for visual extractor)
-    parser.add_argument('--visual_extractor', type=str, default='resnet101', help='the visual extractor to be used. resnet101/chexnet')
+    parser.add_argument('--visual_extractor', type=str, default='chexnet', help='the visual extractor to be used. resnet101/chexnet')
     parser.add_argument('--visual_extractor_pretrained', type=bool, default=True, help='whether to load the pretrained visual extractor')
 
     # Model settings (for Transformer)
@@ -126,7 +126,7 @@ def main():
 
     # build model architecture
     visual_extractor_model = R2GenVisualExtractorModel(args)
-    bert_model = BertClassfier(bert_base_model='bert-base-uncased', out_dim=4096, freeze_layers=[0,1,2,3,4,5])
+    bert_model = BertClassfier(bert_base_model='bert-base-uncased', out_dim=2048, freeze_layers=[0,1,2,3,4,5])
     r2gen_model = R2GenModel(args, tokenizer)
 
     # get function handles of loss and metrics
