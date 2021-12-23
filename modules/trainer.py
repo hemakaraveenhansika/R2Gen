@@ -46,8 +46,8 @@ class BaseContrastiveTrainer(object):
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
 
-        if args.resume_visual_extractor is not None:
-            self.load_visual_extractor_and_bert_model_checkpoint(args.resume_visual_extractor)
+        if args.resume_contrastive_model is not None:
+            self.load_visual_extractor_and_bert_model_checkpoint(args.resume_contrastive_model)
 
         self.bert_tokenizer = self._init_bert_tokenizer()
         self.nt_xent_criterion = self._init_nt_xent()
@@ -93,7 +93,7 @@ class BaseContrastiveTrainer(object):
 
             complete_reslts[epoch] = epoch_reslts
 
-            # evaluate bert_model performance according to configured metric, save best checkpoint as r2gen_model_best
+            # evaluate contrastive_model performance according to configured metric, save best checkpoint as contrastive_model_best
             best = False
             if self.mnt_mode != 'off':
                 try:
@@ -101,8 +101,7 @@ class BaseContrastiveTrainer(object):
                     improved = (self.mnt_mode == 'min' and log[self.mnt_metric] <= self.mnt_best) or \
                                (self.mnt_mode == 'max' and log[self.mnt_metric] >= self.mnt_best)
                 except KeyError:
-                    print("Warning: Metric '{}' is not found. " "bert_model performance monitoring is disabled.".format(
-                        self.mnt_metric))
+                    print("Warning: Metric '{}' is not found. " "contrastive_model performance monitoring is disabled.".format(self.mnt_metric))
                     self.mnt_mode = 'off'
                     improved = False
 
@@ -122,7 +121,7 @@ class BaseContrastiveTrainer(object):
                 self.save_contrastive_checkpoint(epoch, save_best=best)
         self._print_best()
         self._print_best_to_file()
-        self.__save_json(complete_reslts, 'contrastive_model')
+        self.__save_json(complete_reslts, 'contrastive_model_train_logs')
 
         print("end contrastive learn model train")
 
@@ -264,8 +263,8 @@ class BaseR2GenTrainer(object):
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
 
-        if args.resume_visual_extractor is not None:
-            self._load_visual_extractor_model_checkpoint(args.resume_visual_extractor)
+        if args.resume_contrastive_model is not None:
+            self._load_visual_extractor_model_checkpoint(args.resume_contrastive_model)
 
         if args.resume_r2gen is not None:
             self._load_r2gen_model_checkpoint(args.resume_r2gen)
@@ -300,8 +299,7 @@ class BaseR2GenTrainer(object):
                     improved = (self.mnt_mode == 'min' and log[self.mnt_metric] <= self.mnt_best) or \
                                (self.mnt_mode == 'max' and log[self.mnt_metric] >= self.mnt_best)
                 except KeyError:
-                    print("Warning: Metric '{}' is not found. " "r2gen_model performance monitoring is disabled.".format(
-                        self.mnt_metric))
+                    print("Warning: Metric '{}' is not found. " "r2gen_model performance monitoring is disabled.".format(self.mnt_metric))
                     self.mnt_mode = 'off'
                     improved = False
 
@@ -371,18 +369,6 @@ class BaseR2GenTrainer(object):
             torch.save(state, best_path)
             print("Saving current best: r2gen_model_best.pth ...")
 
-    def _load_r2gen_model_checkpoint(self, resume_path):
-        resume_path = str(resume_path)
-        print("Loading r2gen_model checkpoint: {} ...".format(resume_path))
-
-        checkpoint = torch.load(resume_path)
-        self.start_epoch = checkpoint['epoch'] + 1
-        self.mnt_best = checkpoint['monitor_best']
-        self.r2gen_model.load_state_dict(checkpoint['r2gen_model'])
-        self.optimizer.load_state_dict(checkpoint['optimizer'])
-
-        print("Checkpoint loaded. resume_r2gen training from epoch {}".format(self.start_epoch))
-
     def _load_visual_extractor_model_checkpoint(self, resume_path):
         resume_path = str(resume_path)
         print("Loading visual_extractor_model checkpoint: {} ...".format(resume_path))
@@ -393,6 +379,21 @@ class BaseR2GenTrainer(object):
             print("Checkpoint loaded. resume visual_extractor_model from epoch {}".format(checkpoint['epoch']))
         except Exception as err:
             print("[Load visual_extractor_model Failed {}!]\n".format(err))
+
+    def _load_r2gen_model_checkpoint(self, resume_path):
+        resume_path = str(resume_path)
+        print("Loading r2gen_model checkpoint: {} ...".format(resume_path))
+
+        try:
+            checkpoint = torch.load(resume_path)
+            self.start_epoch = checkpoint['epoch'] + 1
+            self.mnt_best = checkpoint['monitor_best']
+            self.r2gen_model.load_state_dict(checkpoint['r2gen_model'])
+            self.optimizer.load_state_dict(checkpoint['optimizer'])
+            print("Checkpoint loaded. resume_r2gen training from epoch {}".format(self.start_epoch))
+        except Exception as err:
+            print("[Load r2gen_model Failed {}!]\n".format(err))
+
 
 
     def _record_best(self, log):
@@ -480,7 +481,6 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
         self.visual_extractor_model.eval()
         self.bert_model.eval()
         with torch.no_grad():
-            test_gts, test_res = [], []
 
             # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.test_dataloader):
             for images_id, images, reports_ids, reports_masks, captions in tqdm(self.test_dataloader):

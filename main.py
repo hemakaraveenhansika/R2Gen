@@ -7,6 +7,8 @@ from modules.metrics import compute_scores
 from modules.optimizers import build_optimizer, build_lr_scheduler
 from modules.trainer import ContrastiveModelTrainer
 from modules.trainer import R2GenTrainer
+from modules.tester import R2GenTester
+
 from modules.loss import compute_loss
 from modules.loss import NTXentLoss
 from models.r2gen import R2GenModel
@@ -85,7 +87,7 @@ def parse_agrs():
 
     # Others
     parser.add_argument('--seed', type=int, default=9233, help='.')
-    parser.add_argument('--resume_visual_extractor', type=str, help='whether to resume_visual_extractor the training from existing checkpoints.')
+    parser.add_argument('--resume_contrastive_model', default='./results/contrastive_model_best.pth', type=str, help='whether to resume_contrastive_model the training from existing checkpoints.')
     parser.add_argument('--resume_r2gen', type=str, help='whether to resume_r2gen the training from existing checkpoints.')
 
     #contrastive learning
@@ -94,13 +96,14 @@ def parse_agrs():
     parser.add_argument('--alpha_weight', type=float, default=0.75, help='alpha_weight')
 
 
-    parser.add_argument('--mode', default='decoder', type=str, help='encoder/decoder')
+    parser.add_argument('--mode', default='train_decoder', type=str, help='encoder/decoder')
 
     args = parser.parse_args()
     args.cuda = torch.cuda.is_available()
     return args
 
-'results/current_contrastive_checkpoint.pth'
+# 'results/contrastive_model_best.pth'
+# 'results/r2gen_model_best.pth'
 
 def main():
     # parse arguments
@@ -135,12 +138,16 @@ def main():
 
     # build trainer and start to train
 
-    if (args.mode == 'encoder') :
+    if (args.mode == 'train_encoder') :
         trainer_contrastive_model = ContrastiveModelTrainer(visual_extractor_model, bert_model, NTXentLoss, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
         trainer_contrastive_model.train()
-    else:
+    elif (args.mode == 'train_decoder'):
         trainer_r2gn = R2GenTrainer(visual_extractor_model, r2gen_model, criterion, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
         trainer_r2gn.train()
+    else:
+        tester_r2gn = R2GenTester(visual_extractor_model, r2gen_model, criterion, metrics, args, test_dataloader)
+        tester_r2gn.test()
+        # test
 
 
 if __name__ == '__main__':
