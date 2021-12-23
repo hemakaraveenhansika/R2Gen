@@ -408,14 +408,14 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
         self.bert_model.train()
 
         # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.train_dataloader):
-        for images_id, images, reports_ids, reports_masks in tqdm(self.train_dataloader):
+        for images_id, images, reports_ids, reports_masks, captions in tqdm(self.train_dataloader):
             images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(self.device), reports_masks.to(self.device)
 
             att_feats, fc_feats = self.visual_extractor_model(images)
             print(att_feats.shape, fc_feats.shape)
-            print(reports_masks)
+            print(captions)
 
-            bert_tokens = self.bert_tokenizer(list(reports_masks), return_tensors="pt", padding=True, truncation=True)
+            bert_tokens = self.bert_tokenizer(list(captions), return_tensors="pt", padding=True, truncation=True)
             text_features = self.bert_model(bert_tokens)
             print(text_features.shape)
 
@@ -434,13 +434,14 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
         with torch.no_grad():
 
             # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.val_dataloader):
-            for images_id, images, reports_ids, reports_masks in tqdm(self.val_dataloader):
+            for images_id, images, reports_ids, reports_masks, captions in tqdm(self.val_dataloader):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
                 att_feats, fc_feats = self.visual_extractor_model(images)
                 print(att_feats.shape, fc_feats.shape)
+                print(captions)
 
-                bert_tokens = self.bert_tokenizer(list(reports_masks), return_tensors="pt", padding=True, truncation=True)
+                bert_tokens = self.bert_tokenizer(list(captions), return_tensors="pt", padding=True, truncation=True)
                 text_features = self.bert_model(bert_tokens)
                 print(text_features.shape)
 
@@ -467,7 +468,7 @@ class R2GenTrainer(BaseR2GenTrainer):
         self.r2gen_model.train()
 
         # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.train_dataloader):
-        for images_id, images, reports_ids, reports_masks in tqdm(self.train_dataloader):
+        for images_id, images, reports_ids, reports_masks, captions in tqdm(self.train_dataloader):
             images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(self.device), reports_masks.to(self.device)
 
             att_feats, fc_feats = self.visual_extractor_model(images)
@@ -490,7 +491,7 @@ class R2GenTrainer(BaseR2GenTrainer):
             val_gts, val_res = [], []
 
             # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.val_dataloader):
-            for images_id, images, reports_ids, reports_masks in tqdm(self.val_dataloader):
+            for images_id, images, reports_ids, reports_masks, captions in tqdm(self.val_dataloader):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
                 att_feats, fc_feats = self.visual_extractor_model(images)
@@ -511,7 +512,7 @@ class R2GenTrainer(BaseR2GenTrainer):
             test_gts, test_res = [], []
 
             # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.test_dataloader):
-            for images_id, images, reports_ids, reports_masks in tqdm(self.test_dataloader):
+            for images_id, images, reports_ids, reports_masks, captions in tqdm(self.test_dataloader):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
                 att_feats, fc_feats = self.visual_extractor_model(images)
