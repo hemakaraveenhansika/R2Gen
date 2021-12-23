@@ -87,7 +87,7 @@ def parse_agrs():
 
     # Others
     parser.add_argument('--seed', type=int, default=9233, help='.')
-    parser.add_argument('--resume_contrastive_model', default='./results/contrastive_model_best.pth', type=str, help='whether to resume_contrastive_model the training from existing checkpoints.')
+    parser.add_argument('--resume_contrastive_model', type=str, help='whether to resume_contrastive_model the training from existing checkpoints.')
     parser.add_argument('--resume_r2gen', type=str, help='whether to resume_r2gen the training from existing checkpoints.')
 
     #contrastive learning
