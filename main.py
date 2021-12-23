@@ -89,6 +89,7 @@ def parse_agrs():
     parser.add_argument('--seed', type=int, default=9233, help='.')
     parser.add_argument('--resume_contrastive_model', type=str, help='whether to resume_contrastive_model the training from existing checkpoints.')
     parser.add_argument('--resume_r2gen', type=str, help='whether to resume_r2gen the training from existing checkpoints.')
+    parser.add_argument('--chexnet_checkpoint', type=str, default="model.pth.tar", help='cheXnet checkpoint.')
 
     #contrastive learning
     parser.add_argument('--contrastive_temperature', type=float, default=0.1, help='contrastive_temperature')
