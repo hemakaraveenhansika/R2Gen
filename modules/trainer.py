@@ -15,10 +15,10 @@ class BaseContrastiveTrainer(object):
         # setup GPU device if available, move bert_model into configured device
         self.device, device_ids = self._prepare_device(args.n_gpu)
         self.visual_extractor_model = visual_extractor_model.to(self.device)
-        # self.bert_model = bert_model.to(self.device)
+        self.bert_model = bert_model.to(self.device)
 
-        if self.args.cuda:
-            self.bert_model = bert_model.cuda()
+        # if self.args.cuda:
+        #     self.bert_model = bert_model.cuda()
 
         if len(device_ids) > 1:
             self.visual_extractor_model = torch.nn.DataParallel(visual_extractor_model, device_ids=device_ids)
@@ -417,14 +417,13 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(self.device), reports_masks.to(self.device)
 
             att_feats, fc_feats = self.visual_extractor_model(images)
-            print(att_feats.shape, fc_feats.shape)
             print(captions)
 
             bert_tokens = self.bert_tokenizer(list(captions), return_tensors="pt", padding=True, truncation=True)
-            bert_tokens = bert_tokens.to('cuda' if torch.cuda.is_available() else 'cpu')
+            bert_tokens = bert_tokens.to(self.device)
 
             text_features = self.bert_model(bert_tokens)
-            print(text_features.shape)
+            print(att_feats.shape, fc_feats.shape, text_features.shape)
 
             train_loss = self.nt_xent_criterion(fc_feats, text_features)
             train_contrastive_losss += train_loss.item()
@@ -445,12 +444,13 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
                 att_feats, fc_feats = self.visual_extractor_model(images)
-                print(att_feats.shape, fc_feats.shape)
-                print(captions)
+                print(list(captions))
 
                 bert_tokens = self.bert_tokenizer(list(captions), return_tensors="pt", padding=True, truncation=True)
+                bert_tokens = bert_tokens.to(self.device)
+
                 text_features = self.bert_model(bert_tokens)
-                print(text_features.shape)
+                print(att_feats.shape, fc_feats.shape, text_features.shape)
 
                 valid_loss = self.nt_xent_criterion(fc_feats, text_features)
                 valid_contrastive_losss += valid_loss.item()
