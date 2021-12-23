@@ -452,7 +452,31 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
 
                 valid_loss = self.nt_xent_criterion(fc_feats, text_features)
                 valid_contrastive_losss += valid_loss.item()
-            log.update(**{'valid_contrastive_loss': valid_contrastive_losss / len(self.val_dataloader)})
+            log.update(**{'val_contrastive_loss': valid_contrastive_losss / len(self.val_dataloader)})
+
+
+        test_contrastive_losss = 0
+        self.visual_extractor_model.eval()
+        self.bert_model.eval()
+        with torch.no_grad():
+            test_gts, test_res = [], []
+
+            # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.test_dataloader):
+            for images_id, images, reports_ids, reports_masks, captions in tqdm(self.test_dataloader):
+                images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
+
+                att_feats, fc_feats = self.visual_extractor_model(images)
+
+                bert_tokens = self.bert_tokenizer(list(captions), return_tensors="pt", padding=True, truncation=True)
+                bert_tokens = bert_tokens.to(self.device)
+
+                text_features = self.bert_model(bert_tokens)
+                print(att_feats.shape, fc_feats.shape, text_features.shape)
+
+                test_loss = self.nt_xent_criterion(fc_feats, text_features)
+                test_contrastive_losss += test_loss.item()
+            log.update(**{'test_contrastive_loss': test_contrastive_losss / len(self.test_dataloader)})
+
         self.lr_scheduler.step()
 
         return log
