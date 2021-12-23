@@ -116,7 +116,7 @@ class _BaseR2GenTester(object):
 
 class R2GenTester(_BaseR2GenTester):
     def __init__(self, visual_extractor_model, r2gen_model, criterion, metric_ftns, args, test_dataloader):
-        super(R2GenTrainer, self).__init__(visual_extractor_model, r2gen_model, criterion, metric_ftns, args)
+        super(R2GenTester, self).__init__(visual_extractor_model, r2gen_model, criterion, metric_ftns, args)
 
         self.test_dataloader = test_dataloader
 
