@@ -497,7 +497,7 @@ class R2GenTrainer(BaseR2GenTrainer):
 
             output = self.r2gen_model(att_feats, fc_feats, reports_ids, mode='train')
             loss = self.criterion(output, reports_ids, reports_masks)
-            print(output.shape, reports_ids.shape, reports_masks.shape)
+            # print(output.shape, reports_ids.shape, reports_masks.shape)
 
             train_loss += loss.item()
             self.optimizer.zero_grad()
