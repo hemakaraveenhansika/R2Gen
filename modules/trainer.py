@@ -421,6 +421,8 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             print(captions)
 
             bert_tokens = self.bert_tokenizer(list(captions), return_tensors="pt", padding=True, truncation=True)
+            bert_tokens = bert_tokens.to('cuda' if torch.cuda.is_available() else 'cpu')
+
             text_features = self.bert_model(bert_tokens)
             print(text_features.shape)
 
