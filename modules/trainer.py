@@ -213,13 +213,6 @@ class BaseContrastiveTrainer(object):
         if improved_val:
             self.best_recorder['val'].update(log)
 
-        improved_test = (self.mnt_mode == 'min' and log[self.mnt_metric_test] <= self.best_recorder['test'][
-            self.mnt_metric_test]) or \
-                        (self.mnt_mode == 'max' and log[self.mnt_metric_test] >= self.best_recorder['test'][
-                            self.mnt_metric_test])
-        if improved_test:
-            self.best_recorder['test'].update(log)
-
     def _print_best(self):
         print('Best results (w.r.t {}) in validation set:'.format('contrastive_loss'))
         for key, value in self.best_recorder['val'].items():
