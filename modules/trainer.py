@@ -497,6 +497,8 @@ class R2GenTrainer(BaseR2GenTrainer):
 
             output = self.r2gen_model(att_feats, fc_feats, reports_ids, mode='train')
             loss = self.criterion(output, reports_ids, reports_masks)
+            print(output.shape, reports_ids.shape, reports_masks.shape)
+
             train_loss += loss.item()
             self.optimizer.zero_grad()
             loss.backward()
@@ -516,10 +518,12 @@ class R2GenTrainer(BaseR2GenTrainer):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
                 att_feats, fc_feats = self.visual_extractor_model(images)
-                # print(att_feats.shape, fc_feats.shape)
 
                 output = self.r2gen_model(att_feats, fc_feats, mode='sample')
                 loss = self.criterion(output, reports_ids, reports_masks)
+
+                print(output.shape, reports_ids.shape, reports_masks.shape)
+
                 valid_loss += loss.item()
                 reports = self.r2gen_model.tokenizer.decode_batch(output.cpu().numpy())
                 ground_truths = self.r2gen_model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
