@@ -390,7 +390,7 @@ class BaseR2GenTrainer(object):
             self.mnt_best = checkpoint['monitor_best']
             self.r2gen_model.load_state_dict(checkpoint['r2gen_model'])
             self.optimizer.load_state_dict(checkpoint['optimizer'])
-            print("Checkpoint loaded. resume_r2gen training from epoch {}".format(self.start_epoch))
+            print("Checkpoint loaded. resume_r2gen training from epoch {}".format(checkpoint['epoch']))
         except Exception as err:
             print("[Load r2gen_model Failed {}!]\n".format(err))
 
