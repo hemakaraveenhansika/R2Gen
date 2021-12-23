@@ -417,7 +417,6 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(self.device), reports_masks.to(self.device)
 
             att_feats, fc_feats = self.visual_extractor_model(images)
-            print(captions)
 
             bert_tokens = self.bert_tokenizer(list(captions), return_tensors="pt", padding=True, truncation=True)
             bert_tokens = bert_tokens.to(self.device)
@@ -444,7 +443,6 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
                 att_feats, fc_feats = self.visual_extractor_model(images)
-                print(list(captions))
 
                 bert_tokens = self.bert_tokenizer(list(captions), return_tensors="pt", padding=True, truncation=True)
                 bert_tokens = bert_tokens.to(self.device)
