@@ -32,8 +32,8 @@ class BaseContrastiveTrainer(object):
         self.save_period = self.args.save_period
 
         self.mnt_mode = args.monitor_mode
-        self.mnt_metric = 'val_' + args.monitor_metric
-        self.mnt_metric_test = 'test_' + args.monitor_metric
+        self.mnt_metric = 'val_contrastive_loss'
+        self.mnt_metric_test = 'test_contrastive_loss'
         assert self.mnt_mode in ['min', 'max']
 
         self.mnt_best = inf if self.mnt_mode == 'min' else -inf
