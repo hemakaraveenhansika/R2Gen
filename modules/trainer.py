@@ -15,7 +15,11 @@ class BaseContrastiveTrainer(object):
         # setup GPU device if available, move bert_model into configured device
         self.device, device_ids = self._prepare_device(args.n_gpu)
         self.visual_extractor_model = visual_extractor_model.to(self.device)
-        self.bert_model = bert_model.to(self.device)
+        # self.bert_model = bert_model.to(self.device)
+
+        if self.args.cuda:
+            self.bert_model = bert_model.cuda()
+
         if len(device_ids) > 1:
             self.visual_extractor_model = torch.nn.DataParallel(visual_extractor_model, device_ids=device_ids)
             self.bert_model = torch.nn.DataParallel(bert_model, device_ids=device_ids)
