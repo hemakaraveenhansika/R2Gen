@@ -145,6 +145,8 @@ class BaseContrastiveTrainer(object):
             n_gpu_use = n_gpu
         device = torch.device('cuda:0' if n_gpu_use > 0 else 'cpu')
         list_ids = list(range(n_gpu_use))
+        print("device, list_ids")
+        print(device, list_ids)
         return device, list_ids
 
     def save_contrastive_checkpoint(self, epoch, save_best=False):
@@ -326,8 +328,7 @@ class BaseR2GenTrainer(object):
             n_gpu_use = n_gpu
         device = torch.device('cuda:0' if n_gpu_use > 0 else 'cpu')
         list_ids = list(range(n_gpu_use))
-        print("device, list_ids")
-        print(device, list_ids)
+
         return device, list_ids
 
     def save_r2gen_checkpoint(self, epoch, save_best=False):
