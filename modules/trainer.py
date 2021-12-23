@@ -32,7 +32,7 @@ class BaseContrastiveTrainer(object):
         self.epochs = self.args.epochs
         self.save_period = self.args.save_period
 
-        self.mnt_mode = args.monitor_mode
+        self.mnt_mode = 'min'
         self.mnt_metric = 'val_contrastive_loss'
         self.mnt_metric_test = 'test_contrastive_loss'
         assert self.mnt_mode in ['min', 'max']
@@ -187,7 +187,7 @@ class BaseContrastiveTrainer(object):
         if save_best:
             best_path = os.path.join(self.checkpoint_dir, 'contrastive_model_best.pth')
             torch.save(state, best_path)
-            print("Saving current best: contrastive_model_best.pth ...")
+            print("Saving current best: contrastive_model_best.pth ...", epoch)
 
     def load_visual_extractor_and_bert_model_checkpoint(self, resume_path):
         resume_path = str(resume_path)
@@ -476,27 +476,6 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
                 valid_contrastive_losss += valid_loss.item()
             log.update(**{'val_contrastive_loss': valid_contrastive_losss / len(self.val_dataloader)})
 
-
-        test_contrastive_losss = 0
-        self.visual_extractor_model.eval()
-        self.bert_model.eval()
-        with torch.no_grad():
-
-            # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.test_dataloader):
-            for images_id, images, reports_ids, reports_masks, captions in tqdm(self.test_dataloader):
-                images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
-
-                att_feats, fc_feats = self.visual_extractor_model(images)
-
-                bert_tokens = self.bert_tokenizer(list(captions), return_tensors="pt", padding=True, truncation=True)
-                bert_tokens = bert_tokens.to(self.device)
-
-                text_features = self.bert_model(bert_tokens)
-                print(fc_feats.shape, text_features.shape)
-
-                test_loss = self.nt_xent_criterion(fc_feats, text_features)
-                test_contrastive_losss += test_loss.item()
-            log.update(**{'test_contrastive_loss': test_contrastive_losss / len(self.test_dataloader)})
 
         self.lr_scheduler.step()
 
