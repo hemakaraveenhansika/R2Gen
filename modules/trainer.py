@@ -201,11 +201,11 @@ class BaseContrastiveTrainer(object):
             self.best_recorder['test'].update(log)
 
     def _print_best(self):
-        print('Best results (w.r.t {}) in validation set:'.format(self.args.monitor_metric))
+        print('Best results (w.r.t {}) in validation set:'.format('contrastive_loss'))
         for key, value in self.best_recorder['val'].items():
             print('\t{:15s}: {}'.format(str(key), value))
 
-        print('Best results (w.r.t {}) in test set:'.format(self.args.monitor_metric))
+        print('Best results (w.r.t {}) in test set:'.format('contrastive_loss'))
         for key, value in self.best_recorder['test'].items():
             print('\t{:15s}: {}'.format(str(key), value))
 
