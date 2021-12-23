@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 
-
 class VisualExtractor(nn.Module):
     def __init__(self, args):
         super(VisualExtractor, self).__init__()
