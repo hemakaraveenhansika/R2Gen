@@ -1,6 +1,7 @@
 import os
 from abc import abstractmethod
 
+import json
 import time
 import torch
 import pandas as pd
@@ -72,18 +73,25 @@ class BaseContrastiveTrainer(object):
 
     def train(self):
         not_improved_count = 0
+        complete_reslts = {}
+
         print("start contrastive learn model train")
         for epoch in range(self.start_epoch, self.epochs + 1):
+            epoch_reslts = {}
             result = self._train_epoch(epoch)
 
             # save logged informations into log dict
             log = {'epoch': epoch}
+
             log.update(result)
             self._record_best(log)
 
             # print logged informations to the screen
             for key, value in log.items():
+                epoch_reslts[str(key)]= value
                 print('\t{:15s}: {}'.format(str(key), value))
+
+            complete_reslts[epoch] = epoch_reslts
 
             # evaluate bert_model performance according to configured metric, save best checkpoint as r2gen_model_best
             best = False
@@ -114,8 +122,18 @@ class BaseContrastiveTrainer(object):
                 self.save_contrastive_checkpoint(epoch, save_best=best)
         self._print_best()
         self._print_best_to_file()
+        self.__save_json(complete_reslts, 'contrastive_model')
+
         print("end contrastive learn model train")
 
+    def __save_json(self, result, record_name):
+        result_path = self.args.record_dir
+
+        if not os.path.exists(result_path):
+            os.makedirs(result_path)
+        with open(os.path.join(result_path, '{}.json'.format(record_name)), 'w') as f:
+            json.dump(result, f)
+        print("logs saved in", result_path)
 
     def _print_best_to_file(self):
         crt_time = time.asctime(time.localtime(time.time()))
@@ -425,7 +443,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             bert_tokens = bert_tokens.to(self.device)
 
             text_features = self.bert_model(bert_tokens)
-            print(att_feats.shape, fc_feats.shape, text_features.shape)
+            print(fc_feats.shape, text_features.shape)
 
             train_loss = self.nt_xent_criterion(fc_feats, text_features)
             train_contrastive_losss += train_loss.item()
@@ -451,7 +469,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
                 bert_tokens = bert_tokens.to(self.device)
 
                 text_features = self.bert_model(bert_tokens)
-                print(att_feats.shape, fc_feats.shape, text_features.shape)
+                print(fc_feats.shape, text_features.shape)
 
                 valid_loss = self.nt_xent_criterion(fc_feats, text_features)
                 valid_contrastive_losss += valid_loss.item()
@@ -474,7 +492,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
                 bert_tokens = bert_tokens.to(self.device)
 
                 text_features = self.bert_model(bert_tokens)
-                print(att_feats.shape, fc_feats.shape, text_features.shape)
+                print(fc_feats.shape, text_features.shape)
 
                 test_loss = self.nt_xent_criterion(fc_feats, text_features)
                 test_contrastive_losss += test_loss.item()
