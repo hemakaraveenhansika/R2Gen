@@ -493,7 +493,7 @@ class R2GenTrainer(BaseR2GenTrainer):
             images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(self.device), reports_masks.to(self.device)
 
             att_feats, fc_feats = self.visual_extractor_model(images)
-            print(att_feats.shape, fc_feats.shape)
+            # print(att_feats.shape, fc_feats.shape)
 
             output = self.r2gen_model(att_feats, fc_feats, reports_ids, mode='train')
 
