@@ -8,8 +8,13 @@ class LanguageModelCriterion(nn.Module):
 
     def forward(self, input, target, mask):
         # truncate to the same size
+
+
         target = target[:, :input.size(1)]
         mask = mask[:, :input.size(1)]
+
+        print(input.size(1), input.shape, target.shape, mask.shape)
+
         output = -input.gather(2, target.long().unsqueeze(2)).squeeze(2) * mask
         output = torch.sum(output) / torch.sum(mask)
 
