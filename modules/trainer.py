@@ -436,7 +436,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             bert_tokens = bert_tokens.to(self.device)
 
             text_features = self.bert_model(bert_tokens)
-            print(att_feats.shape, fc_feats.shape)
+            # print(att_feats.shape, fc_feats.shape)
 
             train_loss = self.nt_xent_criterion(fc_feats, text_features)
             train_contrastive_losss += train_loss.item()
@@ -497,7 +497,7 @@ class R2GenTrainer(BaseR2GenTrainer):
 
             output = self.r2gen_model(att_feats, fc_feats, reports_ids, mode='train')
 
-            print(output.shape, reports_ids.shape, reports_masks.shape)
+            # print(output.shape, reports_ids.shape, reports_masks.shape)
             loss = self.criterion(output, reports_ids, reports_masks)
 
             train_loss += loss.item()
@@ -521,7 +521,7 @@ class R2GenTrainer(BaseR2GenTrainer):
                 att_feats, fc_feats = self.visual_extractor_model(images)
                 output = self.r2gen_model(att_feats, fc_feats, mode='sample')
 
-                print(output.shape, reports_ids.shape, reports_masks.shape)
+                # print(output.shape, reports_ids.shape, reports_masks.shape)
                 loss = self.criterion(output, reports_ids, reports_masks)
 
                 valid_loss += loss.item()
