@@ -145,7 +145,7 @@ class R2GenTester(_BaseR2GenTester):
                 print("each results\n")
                 for index in range(len(images_id)):
                     image_id, real_sent, pred_sent = images_id[index], ground_truths[index], reports[index]
-                    print(image_id, real_sent, pred_sent)
+                    print(image_id, "real_sent - ", real_sent, "pred_sent - ",pred_sent)
                     result_caption[image_id] = {
                         'Image id': image_id,
                         'Real Sent': real_sent,
