@@ -270,8 +270,11 @@ class BaseR2GenTrainer(object):
 
     def train(self):
         not_improved_count = 0
+        complete_reslts = {}
         print("start r2gen model train")
         for epoch in range(self.start_epoch, self.epochs + 1):
+            epoch_reslts = {}
+
             result = self._train_epoch(epoch)
 
             # save logged informations into log dict
@@ -281,7 +284,10 @@ class BaseR2GenTrainer(object):
 
             # print logged informations to the screen
             for key, value in log.items():
+                epoch_reslts[str(key)] = value
                 print('\t{:15s}: {}'.format(str(key), value))
+
+            complete_reslts[epoch] = epoch_reslts
 
             # evaluate r2gen_model performance according to configured metric, save best checkpoint as r2gen_model_best
             best = False
@@ -311,7 +317,17 @@ class BaseR2GenTrainer(object):
                 self.save_r2gen_checkpoint(epoch, save_best=best)
         self._print_best()
         self._print_best_to_file()
+        self.__save_json(complete_reslts, 'r2gen_model_train_logs')
         print("end r2gen model train")
+
+    def __save_json(self, result, record_name):
+        result_path = self.args.record_dir
+
+        if not os.path.exists(result_path):
+            os.makedirs(result_path)
+        with open(os.path.join(result_path, '{}.json'.format(record_name)), 'w') as f:
+            json.dump(result, f)
+        print("logs saved in", result_path)
 
     def _print_best_to_file(self):
         crt_time = time.asctime(time.localtime(time.time()))
