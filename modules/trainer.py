@@ -523,7 +523,7 @@ class R2GenTrainer(BaseR2GenTrainer):
         log = {'train_loss': train_loss / len(self.train_dataloader)}
 
 
-        # valid_loss = 0
+        valid_loss = 0
         self.visual_extractor_model.eval()
         self.r2gen_model.eval()
         with torch.no_grad():
@@ -535,16 +535,18 @@ class R2GenTrainer(BaseR2GenTrainer):
 
                 att_feats, fc_feats = self.visual_extractor_model(images)
                 output = self.r2gen_model(att_feats, fc_feats, mode='sample')
+                output_validation = self.r2gen_model(att_feats, fc_feats, reports_ids, mode='train')
 
-                # loss = self.criterion(output, reports_ids, reports_masks)
-                # valid_loss += loss.item()
+                loss = self.criterion(output_validation, reports_ids, reports_masks)
+                valid_loss += loss.item()
+
                 reports = self.r2gen_model.tokenizer.decode_batch(output.cpu().numpy())
                 ground_truths = self.r2gen_model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
                 val_res.extend(reports)
                 val_gts.extend(ground_truths)
             val_met = self.metric_ftns({i: [gt] for i, gt in enumerate(val_gts)}, {i: [re] for i, re in enumerate(val_res)})
             log.update(**{'val_' + k: v for k, v in val_met.items()})
-            # log.update(**{'valid_loss': valid_loss / len(self.val_dataloader)})
+            log.update(**{'valid_loss': valid_loss / len(self.val_dataloader)})
 
 
         self.visual_extractor_model.eval()
