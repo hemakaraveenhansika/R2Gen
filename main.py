@@ -6,6 +6,7 @@ from modules.dataloaders import R2DataLoader
 from modules.metrics import compute_scores
 from modules.optimizers import build_optimizer, build_lr_scheduler
 from modules.trainer import Trainer
+from modules.tester import Tester
 from modules.loss import compute_loss
 from models.r2gen import R2GenModel
 
@@ -60,7 +61,7 @@ def parse_agrs():
     parser.add_argument('--n_gpu', type=int, default=1, help='the number of gpus to be used.')
     parser.add_argument('--epochs', type=int, default=100, help='the number of training epochs.')
     parser.add_argument('--save_dir', type=str, default='results/iu_xray', help='the patch to save the models.')
-    parser.add_argument('--record_dir', type=str, default='records/', help='the patch to save the results of experiments')
+    parser.add_argument('--record_dir', type=str, default='./', help='the patch to save the results of experiments')
     parser.add_argument('--save_period', type=int, default=1, help='the saving period.')
     parser.add_argument('--monitor_mode', type=str, default='max', choices=['min', 'max'], help='whether to max or min the metric.')
     parser.add_argument('--monitor_metric', type=str, default='BLEU_4', help='the metric to be monitored.')
@@ -81,6 +82,8 @@ def parse_agrs():
     # Others
     parser.add_argument('--seed', type=int, default=9233, help='.')
     parser.add_argument('--resume', type=str, help='whether to resume the training from existing checkpoints.')
+
+    parser.add_argument('--mode', default='train', type=str, help='train/test')
 
     args = parser.parse_args()
     return args
@@ -115,9 +118,15 @@ def main():
     optimizer = build_optimizer(args, model)
     lr_scheduler = build_lr_scheduler(args, optimizer)
 
-    # build trainer and start to train
-    trainer = Trainer(model, criterion, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
-    trainer.train()
+    if (args.mode == 'train'):
+        # build trainer and start to train
+        trainer = Trainer(model, criterion, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
+        trainer.train()
+    elif (args.mode == 'train_decoder'):
+        tester = Tester(model, criterion, metrics, args, test_dataloader)
+        tester.test()
+
+
 
 
 if __name__ == '__main__':

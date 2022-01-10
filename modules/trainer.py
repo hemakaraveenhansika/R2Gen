@@ -1,6 +1,7 @@
 import os
 from abc import abstractmethod
 
+import json
 import time
 import torch
 import pandas as pd
@@ -50,8 +51,10 @@ class BaseTrainer(object):
 
     def train(self):
         not_improved_count = 0
+        complete_reslts = {}
         print("start train")
         for epoch in range(self.start_epoch, self.epochs + 1):
+            epoch_reslts = {}
             result = self._train_epoch(epoch)
 
             # save logged informations into log dict
@@ -61,7 +64,10 @@ class BaseTrainer(object):
 
             # print logged informations to the screen
             for key, value in log.items():
+                epoch_reslts[str(key)] = value
                 print('\t{:15s}: {}'.format(str(key), value))
+
+            complete_reslts[epoch] = epoch_reslts
 
             # evaluate model performance according to configured metric, save best checkpoint as model_best
             best = False
@@ -71,8 +77,7 @@ class BaseTrainer(object):
                     improved = (self.mnt_mode == 'min' and log[self.mnt_metric] <= self.mnt_best) or \
                                (self.mnt_mode == 'max' and log[self.mnt_metric] >= self.mnt_best)
                 except KeyError:
-                    print("Warning: Metric '{}' is not found. " "Model performance monitoring is disabled.".format(
-                        self.mnt_metric))
+                    print("Warning: Metric '{}' is not found. " "Model performance monitoring is disabled.".format(self.mnt_metric))
                     self.mnt_mode = 'off'
                     improved = False
 
@@ -92,6 +97,17 @@ class BaseTrainer(object):
                 self._save_checkpoint(epoch, save_best=best)
         self._print_best()
         self._print_best_to_file()
+        self.__save_json(complete_reslts, 'r2gen_base_model_train_logs')
+        print("end r2gen model train")
+
+    def __save_json(self, result, record_name):
+        result_path = self.args.record_dir
+
+        if not os.path.exists(result_path):
+            os.makedirs(result_path)
+        with open(os.path.join(result_path, '{}.json'.format(record_name)), 'w') as f:
+            json.dump(result, f)
+        print("logs saved in", result_path)
 
     def _print_best_to_file(self):
         crt_time = time.asctime(time.localtime(time.time()))
@@ -134,11 +150,11 @@ class BaseTrainer(object):
             'optimizer': self.optimizer.state_dict(),
             'monitor_best': self.mnt_best
         }
-        filename = os.path.join(self.checkpoint_dir, 'current_checkpoint.pth')
+        filename = os.path.join(self.checkpoint_dir, 'current_r2gen_base_checkpoint.pth')
         torch.save(state, filename)
         print("Saving checkpoint: {} ...".format(filename))
         if save_best:
-            best_path = os.path.join(self.checkpoint_dir, 'model_best.pth')
+            best_path = os.path.join(self.checkpoint_dir, 'r2gen_mode_base_best.pth')
             torch.save(state, best_path)
             print("Saving current best: model_best.pth ...")
 
@@ -203,21 +219,27 @@ class Trainer(BaseTrainer):
             self.optimizer.step()
         log = {'train_loss': train_loss / len(self.train_dataloader)}
 
+        valid_loss = 0
         self.model.eval()
         with torch.no_grad():
             val_gts, val_res = [], []
 
             # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.val_dataloader):
             for images_id, images, reports_ids, reports_masks in tqdm(self.val_dataloader):
-                images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(
-                    self.device), reports_masks.to(self.device)
+                images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
                 output = self.model(images, mode='sample')
+                output_validation = self.model(images, reports_ids, mode='train')
+
+                loss = self.criterion(output_validation, reports_ids, reports_masks)
+                valid_loss += loss.item()
+
                 reports = self.model.tokenizer.decode_batch(output.cpu().numpy())
                 ground_truths = self.model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
                 val_res.extend(reports)
                 val_gts.extend(ground_truths)
             val_met = self.metric_ftns({i: [gt] for i, gt in enumerate(val_gts)}, {i: [re] for i, re in enumerate(val_res)})
             log.update(**{'val_' + k: v for k, v in val_met.items()})
+            log.update(**{'valid_loss': valid_loss / len(self.val_dataloader)})
 
         self.model.eval()
         with torch.no_grad():
