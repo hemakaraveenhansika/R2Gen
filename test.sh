@@ -11,7 +11,7 @@ python main.py \
 --gamma 0.1 \
 --seed 9223 \
 --resume_contrastive_model /kaggle/input/r2gen-contrastive-model-resnet/R2Gen/results/contrastive_model_best.pth \
---resume_r2gen /kaggle/input/r2gen-resnet/R2Gen/results/current_r2gen_checkpoint.pth \
+--resume_r2gen /kaggle/input/r2gen-resnet/R2Gen/results/r2gen_model_best.pth \
 --mode test
 
 #--resume_contrastive_model ./results/contrastive_model_best.pth \
