@@ -18,3 +18,4 @@ python main.py \
 
 #--resume /kaggle/input/r2gen-base/R2Gen/results/r2gen_mode_base_best.pth \
 #--resume /kaggle/input/r2genbasedata/R2Gen/results/r2gen_mode_base_best.pth \
+#--resume /kaggle/working/R2Gen/results/r2gen_mode_base_best.pth \
