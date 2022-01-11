@@ -159,15 +159,18 @@ class BaseTrainer(object):
             print("Saving current best: model_best.pth ...")
 
     def _resume_checkpoint(self, resume_path):
-        resume_path = str(resume_path)
-        print("Loading checkpoint: {} ...".format(resume_path))
-        checkpoint = torch.load(resume_path)
-        self.start_epoch = checkpoint['epoch'] + 1
-        self.mnt_best = checkpoint['monitor_best']
-        self.model.load_state_dict(checkpoint['state_dict'])
-        self.optimizer.load_state_dict(checkpoint['optimizer'])
 
-        print("Checkpoint loaded. Resume training from epoch {}".format(self.start_epoch))
+        try:
+            resume_path = str(resume_path)
+            print("Loading checkpoint: {} ...".format(resume_path))
+            checkpoint = torch.load(resume_path)
+            self.start_epoch = checkpoint['epoch'] + 1
+            self.mnt_best = checkpoint['monitor_best']
+            self.model.load_state_dict(checkpoint['state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer'])
+            print("Checkpoint loaded. Resume training from epoch {}".format(self.start_epoch))
+        except Exception as err:
+            print("[Load visual_extractor_and_bert_model Failed {}!]\n".format(err))
 
     def _record_best(self, log):
         improved_val = (self.mnt_mode == 'min' and log[self.mnt_metric] <= self.best_recorder['val'][
