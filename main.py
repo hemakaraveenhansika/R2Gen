@@ -122,7 +122,7 @@ def main():
         # build trainer and start to train
         trainer = Trainer(model, criterion, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
         trainer.train()
-    elif (args.mode == 'train_decoder'):
+    elif (args.mode == 'test'):
         tester = Tester(model, criterion, metrics, args, test_dataloader)
         tester.test()
 

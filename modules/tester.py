@@ -8,7 +8,7 @@ import pandas as pd
 from numpy import inf
 from tqdm import tqdm
 
-class BaseTrainer(object):
+class BaseTester(object):
     def __init__(self, model, criterion, metric_ftns, args):
         self.args = args
 
@@ -55,6 +55,7 @@ class BaseTrainer(object):
 
         self.__save_json(logs, 'R2Gen_base_model_test_logs')
         self.__save_json(result_caption, 'R2Gen_base_model_test_results')
+        print("end train")
 
     def __save_json(self, result, record_name):
         result_path = self.args.record_dir
@@ -92,7 +93,7 @@ class BaseTrainer(object):
         except Exception as err:
             print("[Load visual_extractor_and_bert_model Failed {}!]\n".format(err))
 
-class Tester(BaseTrainer):
+class Tester(BaseTester):
     def __init__(self, model, criterion, metric_ftns, args, test_dataloader):
         super(Tester, self).__init__(model, criterion, metric_ftns, args)
         # self.train_dataloader = train_dataloader
