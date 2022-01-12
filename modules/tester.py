@@ -86,7 +86,7 @@ class BaseTester(object):
             resume_path = str(resume_path)
             print("Loading checkpoint: {} ...".format(resume_path))
             checkpoint = torch.load(resume_path)
-            self.start_epoch = checkpoint['epoch'] + 1
+            self.start_epoch = checkpoint['epoch']
             self.mnt_best = checkpoint['monitor_best']
             self.model.load_state_dict(checkpoint['state_dict'])
             print("Checkpoint loaded. Resume training from epoch {}".format(self.start_epoch))
