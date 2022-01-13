@@ -9,6 +9,8 @@ from numpy import inf, inexact
 from tqdm import tqdm
 from transformers import BertTokenizer
 
+from .chexnet import DenseNet121
+import torch.nn as nn
 
 class _BaseR2GenTester(object):
     def __init__(self, visual_extractor_model, r2gen_model, criterion, metric_ftns, args):
@@ -96,6 +98,25 @@ class _BaseR2GenTester(object):
             print("Checkpoint loaded. resume visual_extractor_model from epoch {}".format(checkpoint['epoch']))
         except Exception as err:
             print("[Load visual_extractor_model Failed {}!]\n".format(err))
+
+    # def _load_chexnet_model_checkpoint(self, resume_path):
+    #     resume_path = str(resume_path)
+    #     print("Loading chexnet_model checkpoint: {} ...".format(resume_path))
+    #
+    #     try:
+    #         model = DenseNet121()
+    #         checkpoint = torch.load(resume_path)
+    #         state_dict = checkpoint['state_dict']
+    #         for key in list(state_dict.keys()):
+    #             state_dict[key[7:].replace('.1.', '1.').replace('.2.', '2.')] = state_dict.pop(key)
+    #         model.load_state_dict(state_dict)
+    #         model = model.get_model()
+    #         modules = list(model.children())[:-1]
+    #         self.model = nn.Sequential(*modules)
+    #
+    #         print("Checkpoint loaded. resume chexnet from epoch {}".format(checkpoint['epoch']))
+    #     except Exception as err:
+    #         print("[Load visual_extractor_model Failed {}!]\n".format(err))
 
     def _load_r2gen_model_checkpoint(self, resume_path):
         resume_path = str(resume_path)
