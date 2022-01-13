@@ -11,6 +11,7 @@ from transformers import BertTokenizer
 
 from .chexnet import DenseNet121
 import torch.nn as nn
+from torchinfo import summary
 
 class _BaseR2GenTester(object):
     def __init__(self, visual_extractor_model, r2gen_model, criterion, metric_ftns, args):
@@ -19,6 +20,7 @@ class _BaseR2GenTester(object):
         # setup GPU device if available, move r2gen_model into configured device
         self.device, device_ids = self._prepare_device(args.n_gpu)
         self.visual_extractor_model = visual_extractor_model.to(self.device)
+
         self.r2gen_model = r2gen_model.to(self.device)
         if len(device_ids) > 1:
             self.visual_extractor_model = torch.nn.DataParallel(visual_extractor_model, device_ids=device_ids)
@@ -53,14 +55,17 @@ class _BaseR2GenTester(object):
 
     def test(self):
 
-        print("start r2gen model test")
-        logs, result_caption = self._test_R2Gen()
+        print("compare_models")
+        self.compare_models()
 
-        # print logged informations to the screen
-        for key, value in logs.items():
-            print('\t{:15s}: {}'.format(str(key), value))
-        self.__save_json(logs, 'R2Gen_model_test_logs')
-        self.__save_json(result_caption, 'R2Gen_model_test_results')
+        # print("start r2gen model test")
+        # logs, result_caption = self._test_R2Gen()
+        #
+        # # print logged informations to the screen
+        # for key, value in logs.items():
+        #     print('\t{:15s}: {}'.format(str(key), value))
+        # self.__save_json(logs, 'R2Gen_model_test_logs')
+        # self.__save_json(result_caption, 'R2Gen_model_test_results')
         
         print("end r2gen model test")
 
@@ -99,25 +104,6 @@ class _BaseR2GenTester(object):
         except Exception as err:
             print("[Load visual_extractor_model Failed {}!]\n".format(err))
 
-    # def _load_chexnet_model_checkpoint(self, resume_path):
-    #     resume_path = str(resume_path)
-    #     print("Loading chexnet_model checkpoint: {} ...".format(resume_path))
-    #
-    #     try:
-    #         model = DenseNet121()
-    #         checkpoint = torch.load(resume_path)
-    #         state_dict = checkpoint['state_dict']
-    #         for key in list(state_dict.keys()):
-    #             state_dict[key[7:].replace('.1.', '1.').replace('.2.', '2.')] = state_dict.pop(key)
-    #         model.load_state_dict(state_dict)
-    #         model = model.get_model()
-    #         modules = list(model.children())[:-1]
-    #         self.model = nn.Sequential(*modules)
-    #
-    #         print("Checkpoint loaded. resume chexnet from epoch {}".format(checkpoint['epoch']))
-    #     except Exception as err:
-    #         print("[Load visual_extractor_model Failed {}!]\n".format(err))
-
     def _load_r2gen_model_checkpoint(self, resume_path):
         resume_path = str(resume_path)
         print("Loading r2gen_model checkpoint: {} ...".format(resume_path))
@@ -131,7 +117,22 @@ class _BaseR2GenTester(object):
         except Exception as err:
             print("[Load r2gen_model Failed {}!]\n".format(err))
 
+    def compare_models(self):
+        model_1_state_dict = torch.load(self.args.resume_contrastive_model).to(self.device)
+        model_2_state_dict = torch.load(self.args.chexnet_checkpoint).to(self.device)
 
+        models_differ = 0
+        for key_item_1, key_item_2 in zip(model_1_state_dict.items(), model_2_state_dict.items()):
+            if torch.equal(key_item_1[1], key_item_2[1]):
+                pass
+            else:
+                models_differ += 1
+                if (key_item_1[0] == key_item_2[0]):
+                    print('Mismtach found at', key_item_1[0])
+                else:
+                    raise Exception
+        if models_differ == 0:
+            print('Models match perfectly! :)')
 
 
 class R2GenTester(_BaseR2GenTester):
