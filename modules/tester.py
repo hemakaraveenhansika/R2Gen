@@ -55,17 +55,17 @@ class _BaseR2GenTester(object):
 
     def test(self):
 
-        print("compare_models")
-        self.compare_models()
+        # print("compare_models")
+        # self.compare_models()
 
-        # print("start r2gen model test")
-        # logs, result_caption = self._test_R2Gen()
-        #
-        # # print logged informations to the screen
-        # for key, value in logs.items():
-        #     print('\t{:15s}: {}'.format(str(key), value))
-        # self.__save_json(logs, 'R2Gen_model_test_logs')
-        # self.__save_json(result_caption, 'R2Gen_model_test_results')
+        print("start r2gen model test")
+        logs, result_caption = self._test_R2Gen()
+
+        # print logged informations to the screen
+        for key, value in logs.items():
+            print('\t{:15s}: {}'.format(str(key), value))
+        self.__save_json(logs, 'R2Gen_model_test_logs')
+        self.__save_json(result_caption, 'R2Gen_model_test_results')
         
         print("end r2gen model test")
 
@@ -122,7 +122,7 @@ class _BaseR2GenTester(object):
         model_2_state_dict = torch.load(self.args.chexnet_checkpoint)
 
         models_differ = 0
-        for key_item_1, key_item_2 in zip(model_1_state_dict.items(), model_2_state_dict.items()):
+        for key_item_1, key_item_2 in zip(model_1_state_dict['visual_extractor_model'].items(), model_2_state_dict['state_dict'].items()):
             if torch.equal(key_item_1[1], key_item_2[1]):
                 pass
             else:
