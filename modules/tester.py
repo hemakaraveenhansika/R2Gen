@@ -118,8 +118,8 @@ class _BaseR2GenTester(object):
             print("[Load r2gen_model Failed {}!]\n".format(err))
 
     def compare_models(self):
-        model_1_state_dict = torch.load(self.args.resume_contrastive_model).to(self.device)
-        model_2_state_dict = torch.load(self.args.chexnet_checkpoint).to(self.device)
+        model_1_state_dict = torch.load(self.args.resume_contrastive_model)
+        model_2_state_dict = torch.load(self.args.chexnet_checkpoint)
 
         models_differ = 0
         for key_item_1, key_item_2 in zip(model_1_state_dict.items(), model_2_state_dict.items()):
