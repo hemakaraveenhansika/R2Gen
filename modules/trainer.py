@@ -443,6 +443,9 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
 
         # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.train_dataloader):
         for images_id, images, reports_ids, reports_masks, captions in tqdm(self.train_dataloader):
+
+            self.optimizer.zero_grad()
+
             images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(self.device), reports_masks.to(self.device)
 
             att_feats, fc_feats = self.visual_extractor_model(images)
@@ -455,9 +458,9 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
 
             train_loss = self.nt_xent_criterion(fc_feats, text_features)
             train_contrastive_losss += train_loss.item()
-            self.optimizer.zero_grad()
+
             train_loss.backward()
-            torch.nn.utils.clip_grad_value_(self.visual_extractor_model.parameters(), 0.1)
+            # torch.nn.utils.clip_grad_value_(self.visual_extractor_model.parameters(), 0.1)
             self.optimizer.step()
         log = {'train_contrastive_loss': train_contrastive_losss / len(self.train_dataloader)}
 
