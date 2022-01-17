@@ -469,7 +469,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             torch.nn.utils.clip_grad_value_(self.visual_extractor_model.parameters(), 0.1)
             self.optimizer.step()
         log = {'train_contrastive_loss': train_contrastive_losss / len(self.train_dataloader)}
-        wandb.watch(self.model)
+        wandb.watch(self.visual_extractor_model)
 
         valid_contrastive_losss = 0
         self.visual_extractor_model.eval()
