@@ -8,6 +8,8 @@ import pandas as pd
 from numpy import inf
 from tqdm import tqdm
 from transformers import BertTokenizer
+import wandb
+ 
 
 class BaseContrastiveTrainer(object):
     def __init__(self, visual_extractor_model, bert_model, NTXentLoss, metric_ftns, optimizer, args):
@@ -185,6 +187,8 @@ class BaseContrastiveTrainer(object):
         print("Saving checkpoint: {} ...".format(filename))
         if save_best:
             best_path = os.path.join(self.checkpoint_dir, 'contrastive_model_best.pth')
+            wandb_best_path = os.path.join(wandb.run.dir, 'model_best.pth')
+            torch.save(state, wandb_best_path)
             torch.save(state, best_path)
             print("Saving current best: contrastive_model_best.pth ...", epoch)
 
@@ -434,6 +438,11 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
         self.test_dataloader = test_dataloader
+        wandb.config = {
+            "learning_rate": lr_scheduler.get_lr()[0],
+            "epochs": args.epochs,
+            "batch_size": args.batch_size
+        }
 
     def _train_epoch(self, epoch):
 
@@ -460,7 +469,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             torch.nn.utils.clip_grad_value_(self.visual_extractor_model.parameters(), 0.1)
             self.optimizer.step()
         log = {'train_contrastive_loss': train_contrastive_losss / len(self.train_dataloader)}
-
+        wandb.watch(self.model)
 
         valid_contrastive_losss = 0
         self.visual_extractor_model.eval()
@@ -482,7 +491,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
                 valid_loss = self.nt_xent_criterion(fc_feats, text_features)
                 valid_contrastive_losss += valid_loss.item()
             log.update(**{'val_contrastive_loss': valid_contrastive_losss / len(self.val_dataloader)})
-
+        wandb.log(log)
 
         self.lr_scheduler.step()
 

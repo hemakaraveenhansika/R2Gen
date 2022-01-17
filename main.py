@@ -14,6 +14,7 @@ from modules.loss import NTXentLoss
 from models.r2gen import R2GenModel
 from models.r2gen_visual_extractor import R2GenVisualExtractorModel
 from models.r2gen_bert_classfier import BertClassfier
+import wandb
 
 
 def parse_agrs():
@@ -98,6 +99,8 @@ def parse_agrs():
 
 
     parser.add_argument('--mode', default='train_decoder', type=str, help='encoder/decoder')
+    parser.add_argument('--wandb_id', type=str, help='Wandb run id.')
+
 
     args = parser.parse_args()
     args.cuda = torch.cuda.is_available()
@@ -109,6 +112,7 @@ def parse_agrs():
 def main():
     # parse arguments
     args = parse_agrs()
+    wandb.init(id=args.wandb_id, project="r2gen-contrastive", entity="vidura", resume=True)
 
     # fix random seeds
     torch.manual_seed(args.seed)
