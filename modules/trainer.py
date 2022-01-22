@@ -276,6 +276,7 @@ class BaseR2GenTrainer(object):
         not_improved_count = 0
         complete_reslts = {}
         print("start r2gen model train - lr_ve -> ", self.args.lr_ve)
+        wandb.watch(self.visual_extractor_model,log='all')
         for epoch in range(self.start_epoch, self.epochs + 1):
             epoch_reslts = {}
             result = self._train_epoch(epoch)
@@ -469,7 +470,6 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             torch.nn.utils.clip_grad_value_(self.visual_extractor_model.parameters(), 0.1)
             self.optimizer.step()
         log = {'train_contrastive_loss': train_contrastive_losss / len(self.train_dataloader)}
-        wandb.watch(self.visual_extractor_model)
 
         valid_contrastive_losss = 0
         self.visual_extractor_model.eval()
