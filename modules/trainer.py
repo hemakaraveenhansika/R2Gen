@@ -276,7 +276,7 @@ class BaseR2GenTrainer(object):
         not_improved_count = 0
         complete_reslts = {}
         print("start r2gen model train - lr_ve -> ", self.args.lr_ve)
-        wandb.watch(self.visual_extractor_model,log='all')
+        wandb.watch(self.visual_extractor_model,log='all', log_freq=1)
         for epoch in range(self.start_epoch, self.epochs + 1):
             epoch_reslts = {}
             result = self._train_epoch(epoch)
