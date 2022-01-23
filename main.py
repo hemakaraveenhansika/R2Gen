@@ -138,7 +138,7 @@ def main():
     metrics = compute_scores
 
     # build optimizer, learning rate scheduler
-    optimizer = build_optimizer(args, r2gen_model)
+    optimizer = build_optimizer(args, visual_extractor_model)
     lr_scheduler = build_lr_scheduler(args, optimizer)
 
     # build trainer and start to train
