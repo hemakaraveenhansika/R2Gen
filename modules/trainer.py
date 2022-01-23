@@ -17,14 +17,14 @@ class BaseContrastiveTrainer(object):
 
         # setup GPU device if available, move bert_model into configured device
         self.device, device_ids = self._prepare_device(args.n_gpu)
-        self.visual_extractor_model = visual_extractor_model.to(self.device)
+        self.model = visual_extractor_model.to(self.device)
         self.bert_model = bert_model.to(self.device)
 
         # if self.args.cuda:
         #     self.bert_model = bert_model.cuda()
 
         if len(device_ids) > 1:
-            self.visual_extractor_model = torch.nn.DataParallel(visual_extractor_model, device_ids=device_ids)
+            self.model = torch.nn.DataParallel(visual_extractor_model, device_ids=device_ids)
             self.bert_model = torch.nn.DataParallel(bert_model, device_ids=device_ids)
 
         self.NTXentLoss = NTXentLoss
@@ -177,7 +177,7 @@ class BaseContrastiveTrainer(object):
     def save_contrastive_checkpoint(self, epoch, save_best=False):
         state = {
             'epoch': epoch,
-            'visual_extractor_model': self.visual_extractor_model.state_dict(),
+            'visual_extractor_model': self.model.state_dict(),
             'bert_model': self.bert_model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
             'monitor_best': self.mnt_best
@@ -200,7 +200,7 @@ class BaseContrastiveTrainer(object):
             checkpoint = torch.load(resume_path)
             self.start_epoch = checkpoint['epoch'] + 1
             self.mnt_best = checkpoint['monitor_best']
-            self.visual_extractor_model.load_state_dict(checkpoint['visual_extractor_model'])
+            self.model.load_state_dict(checkpoint['visual_extractor_model'])
             self.bert_model.load_state_dict(checkpoint['bert_model'])
             self.optimizer.load_state_dict(checkpoint['optimizer'])
 
@@ -232,10 +232,10 @@ class BaseR2GenTrainer(object):
 
         # setup GPU device if available, move r2gen_model into configured device
         self.device, device_ids = self._prepare_device(args.n_gpu)
-        self.visual_extractor_model = visual_extractor_model.to(self.device)
+        self.model = visual_extractor_model.to(self.device)
         self.r2gen_model = r2gen_model.to(self.device)
         if len(device_ids) > 1:
-            self.visual_extractor_model = torch.nn.DataParallel(visual_extractor_model, device_ids=device_ids)
+            self.model = torch.nn.DataParallel(visual_extractor_model, device_ids=device_ids)
             self.r2gen_model = torch.nn.DataParallel(r2gen_model, device_ids=device_ids)
 
         self.criterion = criterion
@@ -276,7 +276,7 @@ class BaseR2GenTrainer(object):
         not_improved_count = 0
         complete_reslts = {}
         print("start r2gen model train - lr_ve -> ", self.args.lr_ve)
-        wandb.watch(self.visual_extractor_model,log='all', log_freq=2)
+        wandb.watch(self.model,log='all', log_freq=2)
         for epoch in range(self.start_epoch, self.epochs + 1):
             epoch_reslts = {}
             result = self._train_epoch(epoch)
@@ -387,7 +387,7 @@ class BaseR2GenTrainer(object):
 
         try:
             checkpoint = torch.load(resume_path)
-            self.visual_extractor_model.load_state_dict(checkpoint['visual_extractor_model'])
+            self.model.load_state_dict(checkpoint['visual_extractor_model'])
             print("Checkpoint loaded. resume visual_extractor_model from epoch {}".format(checkpoint['epoch']))
         except Exception as err:
             print("[Load visual_extractor_model Failed {}!]\n".format(err))
@@ -448,14 +448,14 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
     def _train_epoch(self, epoch):
 
         train_contrastive_losss = 0
-        self.visual_extractor_model.train()
+        self.model.train()
         self.bert_model.train()
 
         # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.train_dataloader):
         for images_id, images, reports_ids, reports_masks, captions in tqdm(self.train_dataloader):
             images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(self.device), reports_masks.to(self.device)
 
-            att_feats, fc_feats = self.visual_extractor_model(images)
+            att_feats, fc_feats = self.model(images)
 
             bert_tokens = self.bert_tokenizer(list(captions), return_tensors="pt", padding=True, truncation=True)
             bert_tokens = bert_tokens.to(self.device)
@@ -467,12 +467,12 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             train_contrastive_losss += train_loss.item()
             self.optimizer.zero_grad()
             train_loss.backward()
-            torch.nn.utils.clip_grad_value_(self.visual_extractor_model.parameters(), 0.1)
+            torch.nn.utils.clip_grad_value_(self.model.parameters(), 0.1)
             self.optimizer.step()
         log = {'train_contrastive_loss': train_contrastive_losss / len(self.train_dataloader)}
 
         valid_contrastive_losss = 0
-        self.visual_extractor_model.eval()
+        self.model.eval()
         self.bert_model.eval()
         with torch.no_grad():
 
@@ -480,7 +480,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             for images_id, images, reports_ids, reports_masks, captions in tqdm(self.val_dataloader):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
-                att_feats, fc_feats = self.visual_extractor_model(images)
+                att_feats, fc_feats = self.model(images)
 
                 bert_tokens = self.bert_tokenizer(list(captions), return_tensors="pt", padding=True, truncation=True)
                 bert_tokens = bert_tokens.to(self.device)
@@ -509,14 +509,14 @@ class R2GenTrainer(BaseR2GenTrainer):
     def _train_epoch(self, epoch):
 
         train_loss = 0
-        self.visual_extractor_model.eval()
+        self.model.eval()
         self.r2gen_model.train()
 
         # for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.train_dataloader):
         for images_id, images, reports_ids, reports_masks, captions in tqdm(self.train_dataloader):
             images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(self.device), reports_masks.to(self.device)
 
-            att_feats, fc_feats = self.visual_extractor_model(images)
+            att_feats, fc_feats = self.model(images)
             # print(att_feats.shape, fc_feats.shape)
 
             output = self.r2gen_model(att_feats, fc_feats, reports_ids, mode='train')
@@ -533,7 +533,7 @@ class R2GenTrainer(BaseR2GenTrainer):
 
 
         valid_loss = 0
-        self.visual_extractor_model.eval()
+        self.model.eval()
         self.r2gen_model.eval()
         with torch.no_grad():
             val_gts, val_res = [], []
@@ -542,7 +542,7 @@ class R2GenTrainer(BaseR2GenTrainer):
             for images_id, images, reports_ids, reports_masks, captions in tqdm(self.val_dataloader):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
-                att_feats, fc_feats = self.visual_extractor_model(images)
+                att_feats, fc_feats = self.model(images)
                 output = self.r2gen_model(att_feats, fc_feats, mode='sample')
                 output_validation = self.r2gen_model(att_feats, fc_feats, reports_ids, mode='train')
 
@@ -559,7 +559,7 @@ class R2GenTrainer(BaseR2GenTrainer):
             log.update(**{'valid_loss': valid_loss / len(self.val_dataloader)})
 
 
-        self.visual_extractor_model.eval()
+        self.model.eval()
         self.r2gen_model.eval()
         with torch.no_grad():
             test_gts, test_res = [], []
@@ -568,7 +568,7 @@ class R2GenTrainer(BaseR2GenTrainer):
             for images_id, images, reports_ids, reports_masks, captions in tqdm(self.test_dataloader):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
-                att_feats, fc_feats = self.visual_extractor_model(images)
+                att_feats, fc_feats = self.model(images)
                 # print(att_feats.shape, fc_feats.shape)
 
                 output = self.r2gen_model(att_feats, fc_feats, mode='sample')
