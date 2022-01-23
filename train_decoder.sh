@@ -12,7 +12,7 @@ python main.py \
 --seed 9223 \
 --resume_contrastive_model /kaggle/input/r2gencontrastivemodel-v-2/R2Gen/results/contrastive_model_best.pth \
 --resume_r2gen /kaggle/input/r2genbestmodel-v-1/R2Gen/results/current_r2gen_checkpoint.pth \
---mode train_decoder
+--mode train_decoder ${@:1}
 
 
 #--ann_path /kaggle/input/iu-xray-dataset/dataset/iu_xray/annotation.json \
