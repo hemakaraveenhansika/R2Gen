@@ -95,6 +95,8 @@ class _BaseR2GenTester(object):
 
     def _load_visual_extractor_model_checkpoint(self, resume_path):
         resume_path = str(resume_path)
+
+
         print("Loading visual_extractor_model checkpoint: {} ...".format(resume_path))
 
         try:
