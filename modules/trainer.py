@@ -182,7 +182,7 @@ class BaseContrastiveTrainer(object):
             'optimizer': self.optimizer.state_dict(),
             'monitor_best': self.mnt_best
         }
-        filename = os.path.join(self.checkpoint_dir, 'current_contrastive_checkpoint.pth')
+        filename = os.path.join(self.checkpoint_dir, 'current_contrastive_checkpoint_'+str(epoch)+'.pth')
         torch.save(state, filename)
         print("Saving checkpoint: {} ...".format(filename))
         if save_best:
@@ -469,6 +469,7 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
             train_loss.backward()
             torch.nn.utils.clip_grad_value_(self.visual_extractor_model.parameters(), 0.1)
             self.optimizer.step()
+            wandb.watch(self.visual_extractor_model,log='all', log_freq=1)
         log = {'train_contrastive_loss': train_contrastive_losss / len(self.train_dataloader)}
 
         valid_contrastive_losss = 0
