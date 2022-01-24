@@ -75,7 +75,7 @@ def parse_agrs():
 
     # Optimization
     parser.add_argument('--optim', type=str, default='Adam', help='the type of the optimizer.')
-    parser.add_argument('--lr_ve', type=float, default=0.0, help='the learning rate for the visual extractor. 0.0/5e-5')
+    parser.add_argument('--lr_ve', type=float, default=5e-5, help='the learning rate for the visual extractor. 0.0/5e-5')
     parser.add_argument('--lr_ed', type=float, default=1e-4, help='the learning rate for the remaining parameters.')
     parser.add_argument('--weight_decay', type=float, default=5e-5, help='the weight decay.')
     parser.add_argument('--amsgrad', type=bool, default=True, help='.')
@@ -86,7 +86,7 @@ def parse_agrs():
     parser.add_argument('--gamma', type=float, default=0.1, help='the gamma of the learning rate scheduler.')
 
     # Others
-    parser.add_argument('--seed', type=int, default=9225, help='.')
+    parser.add_argument('--seed', type=int, default=9223, help='.')
     parser.add_argument('--resume_contrastive_model', type=str, help='whether to resume_contrastive_model the training from existing checkpoints.')
     parser.add_argument('--resume_r2gen', type=str, help='whether to resume_r2gen the training from existing checkpoints.')
     parser.add_argument('--chexnet_checkpoint', type=str, default="model.pth.tar", help='cheXnet checkpoint.')
