@@ -45,8 +45,8 @@ class R2GenModel(nn.Module):
         # fc_feats = torch.cat((fc_feats_0, fc_feats_1), dim=1)
         # att_feats = torch.cat((att_feats_0, att_feats_1), dim=1)
 
-        att_feats_0, fc_feats_0 = self.visual_extractor_model(images[:, 0])
-        att_feats_1, fc_feats_1 = self.visual_extractor_model(images[:, 1])
+        att_feats_0, fc_feats_0 = self.visual_extractor_model(images)
+        att_feats_1, fc_feats_1 = self.visual_extractor_model(images)
         fc_feats = torch.cat((fc_feats_0, fc_feats_1), dim=1)
         att_feats = torch.cat((att_feats_0, att_feats_1), dim=1)
 
