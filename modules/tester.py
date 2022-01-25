@@ -42,8 +42,8 @@ class _BaseR2GenTester(object):
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
 
-        if args.resume_contrastive_model is not None:
-            self._load_visual_extractor_model_checkpoint(args.resume_contrastive_model)
+        # if args.resume_contrastive_model is not None:
+        #     self._load_visual_extractor_model_checkpoint(args.resume_contrastive_model)
 
         if args.resume_r2gen is not None:
             self._load_r2gen_model_checkpoint(args.resume_r2gen)
