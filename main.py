@@ -4,7 +4,7 @@ import numpy as np
 from modules.tokenizers import Tokenizer
 from modules.dataloaders import R2DataLoader
 from modules.metrics import compute_scores
-from modules.optimizers import build_optimizer, build_lr_scheduler
+from modules.optimizers import build_visual_extractor_optimizer, build_r2gen_optimizer, build_lr_scheduler
 from modules.trainer import ContrastiveModelTrainer
 from modules.trainer import R2GenTrainer
 from modules.tester import R2GenTester
@@ -133,16 +133,23 @@ def main():
     criterion = compute_loss
     metrics = compute_scores
 
-    # build optimizer, learning rate scheduler
-    optimizer = build_optimizer(args, visual_extractor_model, r2gen_model)
-    lr_scheduler = build_lr_scheduler(args, optimizer)
+
 
     # build trainer and start to train
 
     if (args.mode == 'train_encoder') :
+
+        # build optimizer, learning rate scheduler
+        optimizer = build_visual_extractor_optimizer(args, visual_extractor_model)
+        lr_scheduler = build_lr_scheduler(args, optimizer)
+
         trainer_contrastive_model = ContrastiveModelTrainer(visual_extractor_model, bert_model, NTXentLoss, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
         trainer_contrastive_model.train()
     elif (args.mode == 'train_decoder'):
+
+        optimizer = build_visual_extractor_optimizer(args, r2gen_model)
+        lr_scheduler = build_lr_scheduler(args, optimizer)
+
         trainer_r2gn = R2GenTrainer(visual_extractor_model, r2gen_model, criterion, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
         trainer_r2gn.train()
     else:
