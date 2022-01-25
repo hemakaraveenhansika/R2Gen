@@ -14,16 +14,16 @@ import torch.nn as nn
 from torchinfo import summary
 
 class _BaseR2GenTester(object):
-    def __init__(self, visual_extractor_model, r2gen_model, criterion, metric_ftns, args):
+    def __init__(self, r2gen_model, criterion, metric_ftns, args):
         self.args = args
 
         # setup GPU device if available, move r2gen_model into configured device
         self.device, device_ids = self._prepare_device(args.n_gpu)
-        self.visual_extractor_model = visual_extractor_model.to(self.device)
+        # self.visual_extractor_model = visual_extractor_model.to(self.device)
 
         self.r2gen_model = r2gen_model.to(self.device)
         if len(device_ids) > 1:
-            self.visual_extractor_model = torch.nn.DataParallel(visual_extractor_model, device_ids=device_ids)
+            # self.visual_extractor_model = torch.nn.DataParallel(visual_extractor_model, device_ids=device_ids)
             self.r2gen_model = torch.nn.DataParallel(r2gen_model, device_ids=device_ids)
 
         self.criterion = criterion
@@ -93,18 +93,18 @@ class _BaseR2GenTester(object):
         return device, list_ids
 
 
-    def _load_visual_extractor_model_checkpoint(self, resume_path):
-        resume_path = str(resume_path)
-
-
-        print("Loading visual_extractor_model checkpoint: {} ...".format(resume_path))
-
-        try:
-            checkpoint = torch.load(resume_path)
-            self.visual_extractor_model.load_state_dict(checkpoint['visual_extractor_model'])
-            print("Checkpoint loaded. resume visual_extractor_model from epoch {}".format(checkpoint['epoch']))
-        except Exception as err:
-            print("[Load visual_extractor_model Failed {}!]\n".format(err))
+    # def _load_visual_extractor_model_checkpoint(self, resume_path):
+    #     resume_path = str(resume_path)
+    #
+    #
+    #     print("Loading visual_extractor_model checkpoint: {} ...".format(resume_path))
+    #
+    #     try:
+    #         checkpoint = torch.load(resume_path)
+    #         self.visual_extractor_model.load_state_dict(checkpoint['visual_extractor_model'])
+    #         print("Checkpoint loaded. resume visual_extractor_model from epoch {}".format(checkpoint['epoch']))
+    #     except Exception as err:
+    #         print("[Load visual_extractor_model Failed {}!]\n".format(err))
 
     def _load_r2gen_model_checkpoint(self, resume_path):
         resume_path = str(resume_path)
@@ -138,15 +138,15 @@ class _BaseR2GenTester(object):
 
 
 class R2GenTester(_BaseR2GenTester):
-    def __init__(self, visual_extractor_model, r2gen_model, criterion, metric_ftns, args, test_dataloader):
-        super(R2GenTester, self).__init__(visual_extractor_model, r2gen_model, criterion, metric_ftns, args)
+    def __init__(self, r2gen_model, criterion, metric_ftns, args, test_dataloader):
+        super(R2GenTester, self).__init__(r2gen_model, criterion, metric_ftns, args)
 
         self.test_dataloader = test_dataloader
 
     def _test_R2Gen(self):
 
         result_caption = {}
-        self.visual_extractor_model.eval()
+        # self.visual_extractor_model.eval()
         self.r2gen_model.eval()
         with torch.no_grad():
             test_gts, test_res = [], []
@@ -155,10 +155,10 @@ class R2GenTester(_BaseR2GenTester):
             for images_id, images, reports_ids, reports_masks, captions in tqdm(self.test_dataloader):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to( self.device), reports_masks.to(self.device)
 
-                att_feats, fc_feats = self.visual_extractor_model(images)
-                print(att_feats.shape, fc_feats.shape)
+                # att_feats, fc_feats = self.visual_extractor_model(images)
+                # print(att_feats.shape, fc_feats.shape)
 
-                output = self.r2gen_model(att_feats, fc_feats, mode='sample')
+                output = self.r2gen_model(images, mode='sample')
                 reports = self.r2gen_model.tokenizer.decode_batch(output.cpu().numpy())
                 ground_truths = self.r2gen_model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
                 test_res.extend(reports)

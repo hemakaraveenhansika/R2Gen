@@ -493,8 +493,8 @@ class ContrastiveModelTrainer(BaseContrastiveTrainer):
 
 
 class R2GenTrainer(BaseR2GenTrainer):
-    def __init__(self, visual_extractor_model, r2gen_model, criterion, metric_ftns, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader):
-        super(R2GenTrainer, self).__init__(visual_extractor_model, r2gen_model, criterion, metric_ftns, optimizer, args)
+    def __init__(self, r2gen_model, criterion, metric_ftns, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader):
+        super(R2GenTrainer, self).__init__(r2gen_model, criterion, metric_ftns, optimizer, args)
         self.lr_scheduler = lr_scheduler
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader

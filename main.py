@@ -147,13 +147,13 @@ def main():
         trainer_contrastive_model.train()
     elif (args.mode == 'train_decoder'):
 
-        optimizer = build_visual_extractor_optimizer(args, r2gen_model)
+        optimizer = build_r2gen_optimizer(args, r2gen_model)
         lr_scheduler = build_lr_scheduler(args, optimizer)
 
-        trainer_r2gn = R2GenTrainer(visual_extractor_model, r2gen_model, criterion, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
+        trainer_r2gn = R2GenTrainer(r2gen_model, criterion, metrics, optimizer, args, lr_scheduler, train_dataloader, val_dataloader, test_dataloader)
         trainer_r2gn.train()
     else:
-        tester_r2gn = R2GenTester(visual_extractor_model, r2gen_model, criterion, metrics, args, test_dataloader)
+        tester_r2gn = R2GenTester(r2gen_model, criterion, metrics, args, test_dataloader)
         tester_r2gn.test()
         # test
 
