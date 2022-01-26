@@ -24,7 +24,7 @@ class R2GenModel(nn.Module):
         return super().__str__() + '\nTrainable parameters: {}'.format(params)
 
     def forward_iu_xray(self, images, targets=None, mode='train'):
-        print(images[:, 0].shape, images[:, 1].shape)
+        print(images.shape, images[:, 0].shape, images[:, 1].shape)
         print(images[:, 0])
 
         att_feats_0, fc_feats_0 = self.visual_extractor(images[:, 0])
